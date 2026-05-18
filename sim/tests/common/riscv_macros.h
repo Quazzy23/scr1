@@ -103,58 +103,54 @@
 
 #define RVTEST_CODE_BEGIN                                               \
         .section .text.init;                                            \
-        .org 0xC0, 0x00;                                                \
-        .balign  64;                                                    \
+        .org 0x1780;                                                    \
+        .balign 64;                                                     \
         .weak stvec_handler;                                            \
         .weak mtvec_handler;                                            \
 trap_vector:                                                            \
-        /* test whether the test came from pass/fail */                 \
         csrr a4, mcause;                                                \
+        li a5, 2;                                                       \
+        bne a4, a5, handle_ecall;                                       \
+        li t0, 0x006C0000;                                              \
+        li t1, 105; sb t1, 0(t0);                                       \
+        li t1, 108; sb t1, 0(t0);                                       \
+        sb t1, 0(t0);                                                   \
+        li t1, 101; sb t1, 0(t0);                                       \
+        li t1, 120; sb t1, 0(t0);                                       \
+        li t1, 99; sb t1, 0(t0);                                        \
+        li t1, 10; sb t1, 0(t0);                                        \
+        li a0, 0;                                                       \
+        j _report;                                                      \
+handle_ecall:                                                           \
         li a5, CAUSE_USER_ECALL;                                        \
         beq a4, a5, _report;                                            \
         li a5, CAUSE_SUPERVISOR_ECALL;                                  \
         beq a4, a5, _report;                                            \
         li a5, CAUSE_MACHINE_ECALL;                                     \
         beq a4, a5, _report;                                            \
-        /* if an mtvec_handler is defined, jump to it */                \
         la a4, mtvec_handler;                                           \
         beqz a4, 1f;                                                    \
         jr a4;                                                          \
-        /* was it an interrupt or an exception? */                      \
 1:      csrr a4, mcause;                                                \
-        bgez a4, handle_exception;                                      \
+        bgez a4, other_exception;                                       \
         INTERRUPT_HANDLER;                                              \
-handle_exception:                                                       \
-        /* we don't know how to handle whatever the exception was */    \
 other_exception:                                                        \
-        /* some unhandlable exception occurred */                       \
         li   a0, 0x1;                                                   \
 _report:                                                                \
         j sc_exit;                                                      \
-        .balign  64;                                                    \
+        .org 0x1F00;                                                    \
+        .balign 64;                                                     \
         .globl _start;                                                  \
 _start:                                                                 \
         RISCV_MULTICORE_DISABLE;                                        \
-        /*INIT_SPTBR;*/                                                 \
-        /*INIT_PMP;*/                                                   \
         DELEGATE_NO_TRAPS;                                              \
         li TESTNUM, 0;                                                  \
         la t0, trap_vector;                                             \
         csrw mtvec, t0;                                                 \
         CHECK_XLEN;                                                     \
-        /* if an stvec_handler is defined, delegate exceptions to it */ \
         la t0, stvec_handler;                                           \
         beqz t0, 1f;                                                    \
         csrw stvec, t0;                                                 \
-        li t0, (1 << CAUSE_LOAD_PAGE_FAULT) |                           \
-               (1 << CAUSE_STORE_PAGE_FAULT) |                          \
-               (1 << CAUSE_FETCH_PAGE_FAULT) |                          \
-               (1 << CAUSE_MISALIGNED_FETCH) |                          \
-               (1 << CAUSE_USER_ECALL) |                                \
-               (1 << CAUSE_BREAKPOINT);                                 \
-        csrw medeleg, t0;                                               \
-        csrr t1, medeleg;                                               \
-        bne t0, t1, other_exception;                                    \
 1:      csrwi mstatus, 0;                                               \
         init;                                                           \
         EXTRA_INIT;                                                     \
