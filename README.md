@@ -22,7 +22,7 @@ To align the software with the hardware changes, the following files were update
 - **`sim/tests/common/link.ld`**: Set `ORIGIN` to `0x0` to allow absolute positioning using `.org` directives.
 - **`sim/tests/common/riscv_macros.h`**: 
     - Updated `.org` offsets to account for a `0x100` byte linker shift discovered during debugging.
-    - Implemented a custom loop in `trap_vector` to write ASCII codes for `"illexc"` to the simulation console address `0x006C0000`.
+    - Implemented a custom loop in `trap_vector` to write ASCII codes for `"illexc"` to the simulation console address `0xF0000000`.
 
 ## Results
 The configuration was verified using the `isa/rv32mi/illegal.S` test.
