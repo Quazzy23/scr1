@@ -448,6 +448,21 @@ end
 
 `endif // SCR1_TRACE_LOG_EN
 
+`ifdef SCR1_TRACE_LOG_EN
+always_ff @(posedge clk) begin
+    if (exu2trace_update_pc_en_i) begin
+        // Детектор команды DIV (Variant 5)
+        if ((ifu2trace_instr_i & 32'hFE00707F) == 32'h02004033) begin
+            $display("--------------------------------------------------");
+            $display("!!! SUCCESS: MONITOR DETECTED DIV COMMAND !!!");
+            $display("Time: %0t | PC: %h", $time, exu2trace_update_pc_i);
+            $display("STATUS: MIE=%b, MCAUSE=%h", csr2trace_mstatus_mie_i, csr2trace_mcause_ec_i);
+            $display("--------------------------------------------------");
+        end
+    end
+end
+`endif
+
 endmodule : scr1_tracelog
 
 `endif // SCR1_TRGT_SIMULATION
