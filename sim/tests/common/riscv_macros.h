@@ -111,7 +111,7 @@ trap_vector:                                                            \
         csrr a4, mcause;                                                \
         li a5, 2;                                                       \
         bne a4, a5, handle_ecall;                                       \
-        li t0, 0x006C0000;                                              \
+        li t0, 0xF0000000;                                            \
         li t1, 105; sb t1, 0(t0);                                       \
         li t1, 108; sb t1, 0(t0);                                       \
         sb t1, 0(t0);                                                   \
